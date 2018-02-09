@@ -1,13 +1,18 @@
 #!/bin/bash
 
+IP_SERVER=54.36.103.34
+
 _LinSTT_transcribe () {
-    
-    # envoi l'audio file a kaldi_gstreamer et recupere la transcription
-    curl -T $audiofile  http://localhost:8888/client/dynamic/recognize > ~/jarvis/stt_engines/LinSTT/res/event.json
-    python linstt.py
-    read line < ~/jarvis/stt_engines/LinSTT/res/transcription.txt
-    say "$line"
-    wait
+	# envoi l'audio file a kaldi_gstreamer et recupere la transcription
+	transcript=$(curl -X POST http://${IP_SERVER}:3000/api/transcript -H "Content-type: audio/wave" --data-binary "@$audiofile")
+	transcribed=$(echo $transcript | grep -o "\[.*\]" | sed "s/\}\]//g" | sed "s/\[{//g" | sed "s/\"//g" | sed "s/\utterance://g")
+	
+	echo "##Transcription##"
+	echo $transcribed
+
+    say "$transcribed"
+    echo $transcribed > $forder
+    #wait
 }
 
 LinSTT_STT () { # recupere l'audio file et faite appel a la fonction _LinSTT_transcribe
